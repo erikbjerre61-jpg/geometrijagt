@@ -48,7 +48,7 @@
       <button class="shape-btn" onclick="setShape('triangle','Trekant',this)">Trekant</button>
       <button class="shape-btn" onclick="setShape('square','Kvadrat',this)">Kvadrat</button>
       <button class="shape-btn" onclick="setShape('rectangle','Rektangel',this)">Rektangel</button>
-      <button class="shape-btn" onclick="setShape('rhombus','Rombe',this)">Rombe</button>
+      <button class="shape-btn" onclick="setShape('trapez','Trapez',this)">Trapez</button>
       <button class="shape-btn" onclick="setShape('isotriangle','Ligesidet trekant',this)">Ligesidet △</button>
       <button class="shape-btn" onclick="setShape('parallelogram','Parallellogram',this)">Parallello­gram</button>
       <button class="shape-btn" onclick="setShape('oval','Oval',this)">Oval</button>
@@ -136,21 +136,23 @@
       sctx.closePath();
 
     } else if (currentShape === 'isotriangle') {
-      // Ligesidet trekant: højde = 1.5 x grundlinje
-      // grundlinje = 2*size, højde = 3*size
-      const base = size * 1.4;
+      // Ligesidet trekant: smal som standard trekant, højde = 1.5 x grundlinje
+      const base = size * 0.866; // samme bredde som standard trekant
       const height = base * 1.5;
       sctx.moveTo(cx, cy - height * 0.6);
       sctx.lineTo(cx + base, cy + height * 0.4);
       sctx.lineTo(cx - base, cy + height * 0.4);
       sctx.closePath();
 
-    } else if (currentShape === 'rhombus') {
-      // Rombe
-      sctx.moveTo(cx, cy - size);
-      sctx.lineTo(cx + size * 0.65, cy);
-      sctx.lineTo(cx, cy + size);
-      sctx.lineTo(cx - size * 0.65, cy);
+    } else if (currentShape === 'trapez') {
+      // Trapez: bred bund, smal top
+      const bund = size * 1.1;
+      const top = size * 0.5;
+      const hh = size * 0.6;
+      sctx.moveTo(cx - top, cy - hh);
+      sctx.lineTo(cx + top, cy - hh);
+      sctx.lineTo(cx + bund, cy + hh);
+      sctx.lineTo(cx - bund, cy + hh);
       sctx.closePath();
 
     } else if (currentShape === 'parallelogram') {
