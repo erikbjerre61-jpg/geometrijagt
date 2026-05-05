@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Geometrijagt</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #000; font-family: -apple-system, sans-serif; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+  #app { position: relative; width: 100%; height: 100dvh; overflow: hidden; }
+  #video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  #canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+  #ui-top { position: absolute; top: 0; left: 0; right: 0; padding: env(safe-area-inset-top, 16px) 20px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.65), transparent); display: flex; justify-content: space-between; align-items: flex-end; padding-top: max(env(safe-area-inset-top), 16px); }
+  #shape-label { color: #fff; font-size: 22px; font-weight: 600; text-shadow: 0 1px 4px rgba(0,0,0,0.5); }
+
+  #ui-bottom { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 20px env(safe-area-inset-bottom, 20px); background: linear-gradient(to top, rgba(0,0,0,0.75), transparent); }
+
+  #shape-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+  .shape-btn {
+    background: rgba(255,255,255,0.15);
+    border: 1.5px solid rgba(255,255,255,0.25);
+    border-radius: 10px;
+    color: #fff;
+    font-size: 13px;
+    padding: 10px 4px;
+    cursor: pointer;
+    text-align: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .shape-btn.active { background: rgba(255,255,255,0.35); border-color: rgba(255,255,255,0.8); }
+
+  #controls { display: flex; align-items: center; gap: 10px; }
+  #opacity-label { color: rgba(255,255,255,0.75); font-size: 13px; white-space: nowrap; }
+  #opacity-slider { flex: 1; accent-color: #fff; height: 4px; }
+
+  #start-screen {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 16px; padding: 32px; text-align: center;
+  }
+  #start-screen h1 { color: #fff; font-size: 26px; font-weight: 700; }
+  #start-screen p { color: rgba(255,255,255,0.65); font-size: 15px; line-height: 1.5; max-width: 280px; }
+  #start-btn {
+    background: #fff; color: #000;
+    border: none; border-radius: 14px;
+    padding: 14px 36px; font-size: 17px; font-weight: 600;
+    cursor: pointer; margin-top: 8px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #error-msg { color: #ff6b6b; font-size: 14px; display: none; }
+</style>
+</head>
+<body>
+<div id="app">
+  <video id="video" autoplay playsinline muted></video>
+  <canvas id="canvas"></canvas>
+
+  <div id="ui-top">
+    <span id="shape-label">Cirkel</span>
+  </div>
+
+  <div id="ui-bottom">
+    <div id="shape-grid">
+      <button class="shape-btn active" onclick="setShape('circle', 'Cirkel', this)">Cirkel</button>
+      <button class="shape-btn" onclick="setShape('triangle', 'Trekant', this)">Trekant</button>
+      <button class="shape-btn" onclick="setShape('square', 'Kvadrat', this)">Kvadrat</button>
+      <button class="shape-btn" onclick="setShape('rectangle', 'Rektangel', this)">Rektangel</button>
+      <button class="shape-btn" onclick="setShape('pentagon', 'Pentagon', this)">Pentagon</button>
+      <button class="shape-btn" onclick="setShape('hexagon', 'Sekskant', this)">Sekskant</button>
+      <button class="shape-btn" onclick="setShape('star', 'Stjerne', this)">Stjerne</button>
+      <button class="shape-btn" onclick="setShape('oval', 'Oval', this)">Oval</button>
+    </div>
+    <div id="controls">
+      <span id="opacity-label">Gennemsigtighed</span>
+      <input type="range" id="opacity-slider" min="10" max="85" value="40" step="5" oninput="opacity = this.value / 100">
+    </div>
+  </div>
+
+  <div id="start-screen">
+    <h1>Geometrijagt</h1>
+    <p>Vælg en geometrisk figur og find noget i virkeligheden der har samme form.</p>
+    <button id="start-btn" onclick="startCamera()">Start kamera</button>
+    <span id="error-msg">Kunne ikke åbne kamera. Tjek at du har givet tilladelse i indstillinger.</span>
+  </div>
+</div>
+
+<script>
+  let currentShape = 'circle';
+  let opacity = 0.4;
+  let animFrame;
+
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const video = document.getElementById('video');
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  function setShape(shape, label, btn) {
+    currentShape = shape;
+    document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('shape-label').textContent = label;
+  }
+
+  function drawShape() {
+    resizeCanvas();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    const size = Math.min(canvas.width, canvas.height) * 0.36;
+
+    ctx.strokeStyle = `rgba(255, 255, 255, ${Math.min(opacity * 2.5, 0.95)})`;
+    ctx.fillStyle = `rgba(80, 160, 255, ${opacity})`;
+    ctx.lineWidth = 3.5;
+
+    ctx.beginPath();
+    if (currentShape === 'circle') {
+      ctx.arc(cx, cy, size, 0, Math.PI * 2);
+    } else if (currentShape === 'oval') {
+      ctx.ellipse(cx, cy, size, size * 0.6, 0, 0, Math.PI * 2);
+    } else if (currentShape === 'square') {
+      ctx.rect(cx - size, cy - size, size * 2, size * 2);
+    } else if (currentShape === 'rectangle') {
+      ctx.rect(cx - size, cy - size * 0.58, size * 2, size * 1.16);
+    } else if (currentShape === 'triangle') {
+      ctx.moveTo(cx, cy - size);
+      ctx.lineTo(cx + size * 0.866, cy + size * 0.5);
+      ctx.lineTo(cx - size * 0.866, cy + size * 0.5);
+      ctx.closePath();
+    } else if (currentShape === 'pentagon') {
+      for (let i = 0; i < 5; i++) {
+        const a = (i * 2 * Math.PI / 5) - Math.PI / 2;
+        i === 0 ? ctx.moveTo(cx + size * Math.cos(a), cy + size * Math.sin(a))
+                : ctx.lineTo(cx + size * Math.cos(a), cy + size * Math.sin(a));
+      }
+      ctx.closePath();
+    } else if (currentShape === 'hexagon') {
+      for (let i = 0; i < 6; i++) {
+        const a = (i * 2 * Math.PI / 6) - Math.PI / 6;
+        i === 0 ? ctx.moveTo(cx + size * Math.cos(a), cy + size * Math.sin(a))
+                : ctx.lineTo(cx + size * Math.cos(a), cy + size * Math.sin(a));
+      }
+      ctx.closePath();
+    } else if (currentShape === 'star') {
+      for (let i = 0; i < 10; i++) {
+        const r = i % 2 === 0 ? size : size * 0.42;
+        const a = (i * Math.PI / 5) - Math.PI / 2;
+        i === 0 ? ctx.moveTo(cx + r * Math.cos(a), cy + r * Math.sin(a))
+                : ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+      }
+      ctx.closePath();
+    }
+    ctx.fill();
+    ctx.stroke();
+    animFrame = requestAnimationFrame(drawShape);
+  }
+
+  async function startCamera() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false
+      });
+      video.srcObject = stream;
+      document.getElementById('start-screen').style.display = 'none';
+      drawShape();
+    } catch (e) {
+      document.getElementById('error-msg').style.display = 'block';
+      document.getElementById('start-btn').textContent = 'Prøv igen';
+    }
+  }
+
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+</script>
+</body>
+</html>
