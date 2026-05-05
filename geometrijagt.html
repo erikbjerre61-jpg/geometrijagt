@@ -6,52 +6,50 @@
 <title>Geometrijagt</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #000; font-family: -apple-system, sans-serif; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  body { background: #000; font-family: -apple-system, sans-serif; height: 100dvh; overflow: hidden; }
 
   #app { position: relative; width: 100%; height: 100dvh; overflow: hidden; }
   #video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   #canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 
-  #ui-top { position: absolute; top: 0; left: 0; right: 0; padding: env(safe-area-inset-top, 16px) 20px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.65), transparent); display: flex; justify-content: space-between; align-items: flex-end; padding-top: max(env(safe-area-inset-top), 16px); }
+  #ui-top { position: absolute; top: 0; left: 0; right: 0; padding: 20px; padding-top: max(env(safe-area-inset-top), 16px); background: linear-gradient(to bottom, rgba(0,0,0,0.65), transparent); display: flex; justify-content: space-between; align-items: flex-end; }
   #shape-label { color: #fff; font-size: 22px; font-weight: 600; text-shadow: 0 1px 4px rgba(0,0,0,0.5); }
 
-  #ui-bottom { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 20px env(safe-area-inset-bottom, 20px); background: linear-gradient(to top, rgba(0,0,0,0.75), transparent); }
+  #ui-bottom { position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 16px max(env(safe-area-inset-bottom), 20px); background: linear-gradient(to top, rgba(0,0,0,0.75), transparent); }
 
   #shape-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
-  .shape-btn {
-    background: rgba(255,255,255,0.15);
-    border: 1.5px solid rgba(255,255,255,0.25);
-    border-radius: 10px;
-    color: #fff;
-    font-size: 13px;
-    padding: 10px 4px;
-    cursor: pointer;
-    text-align: center;
-    -webkit-tap-highlight-color: transparent;
-  }
+  .shape-btn { background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.25); border-radius: 10px; color: #fff; font-size: 13px; padding: 10px 4px; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; }
   .shape-btn.active { background: rgba(255,255,255,0.35); border-color: rgba(255,255,255,0.8); }
 
-  #controls { display: flex; align-items: center; gap: 10px; }
-  #opacity-label { color: rgba(255,255,255,0.75); font-size: 13px; white-space: nowrap; }
-  #opacity-slider { flex: 1; accent-color: #fff; height: 4px; }
+  #bottom-controls { display: flex; align-items: center; gap: 12px; }
+  #opacity-wrap { display: flex; align-items: center; gap: 8px; flex: 1; }
+  #opacity-label { color: rgba(255,255,255,0.75); font-size: 12px; white-space: nowrap; }
+  #opacity-slider { flex: 1; accent-color: #fff; }
 
-  #start-screen {
-    position: absolute; inset: 0;
-    background: rgba(0,0,0,0.85);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 16px; padding: 32px; text-align: center;
+  #capture-btn {
+    width: 60px; height: 60px; border-radius: 50%;
+    background: #fff; border: 4px solid rgba(255,255,255,0.4);
+    cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.1s;
   }
+  #capture-btn:active { transform: scale(0.9); background: #ddd; }
+  #capture-btn svg { width: 28px; height: 28px; }
+
+  #start-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.88); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 32px; text-align: center; }
   #start-screen h1 { color: #fff; font-size: 26px; font-weight: 700; }
   #start-screen p { color: rgba(255,255,255,0.65); font-size: 15px; line-height: 1.5; max-width: 280px; }
-  #start-btn {
-    background: #fff; color: #000;
-    border: none; border-radius: 14px;
-    padding: 14px 36px; font-size: 17px; font-weight: 600;
-    cursor: pointer; margin-top: 8px;
-    -webkit-tap-highlight-color: transparent;
-  }
+  #start-btn { background: #fff; color: #000; border: none; border-radius: 14px; padding: 14px 36px; font-size: 17px; font-weight: 600; cursor: pointer; margin-top: 8px; -webkit-tap-highlight-color: transparent; }
   #error-msg { color: #ff6b6b; font-size: 14px; display: none; }
+
+  #preview-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 24px; }
+  #preview-overlay.visible { display: flex; }
+  #preview-img { max-width: 100%; max-height: 62dvh; border-radius: 12px; object-fit: contain; }
+  #preview-label { color: rgba(255,255,255,0.55); font-size: 13px; text-align: center; }
+  #preview-btns { display: flex; gap: 12px; }
+  #save-btn { background: #fff; color: #000; border: none; border-radius: 12px; padding: 13px 28px; font-size: 16px; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  #discard-btn { background: rgba(255,255,255,0.12); color: #fff; border: 1.5px solid rgba(255,255,255,0.3); border-radius: 12px; padding: 13px 28px; font-size: 16px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 </style>
 </head>
 <body>
@@ -65,18 +63,35 @@
 
   <div id="ui-bottom">
     <div id="shape-grid">
-      <button class="shape-btn active" onclick="setShape('circle', 'Cirkel', this)">Cirkel</button>
-      <button class="shape-btn" onclick="setShape('triangle', 'Trekant', this)">Trekant</button>
-      <button class="shape-btn" onclick="setShape('square', 'Kvadrat', this)">Kvadrat</button>
-      <button class="shape-btn" onclick="setShape('rectangle', 'Rektangel', this)">Rektangel</button>
-      <button class="shape-btn" onclick="setShape('pentagon', 'Pentagon', this)">Pentagon</button>
-      <button class="shape-btn" onclick="setShape('hexagon', 'Sekskant', this)">Sekskant</button>
-      <button class="shape-btn" onclick="setShape('star', 'Stjerne', this)">Stjerne</button>
-      <button class="shape-btn" onclick="setShape('oval', 'Oval', this)">Oval</button>
+      <button class="shape-btn active" onclick="setShape('circle','Cirkel',this)">Cirkel</button>
+      <button class="shape-btn" onclick="setShape('triangle','Trekant',this)">Trekant</button>
+      <button class="shape-btn" onclick="setShape('square','Kvadrat',this)">Kvadrat</button>
+      <button class="shape-btn" onclick="setShape('rectangle','Rektangel',this)">Rektangel</button>
+      <button class="shape-btn" onclick="setShape('pentagon','Pentagon',this)">Pentagon</button>
+      <button class="shape-btn" onclick="setShape('hexagon','Sekskant',this)">Sekskant</button>
+      <button class="shape-btn" onclick="setShape('star','Stjerne',this)">Stjerne</button>
+      <button class="shape-btn" onclick="setShape('oval','Oval',this)">Oval</button>
     </div>
-    <div id="controls">
-      <span id="opacity-label">Gennemsigtighed</span>
-      <input type="range" id="opacity-slider" min="10" max="85" value="40" step="5" oninput="opacity = this.value / 100">
+    <div id="bottom-controls">
+      <div id="opacity-wrap">
+        <span id="opacity-label">Gennemsigtighed</span>
+        <input type="range" id="opacity-slider" min="10" max="85" value="40" step="5" oninput="opacity = this.value / 100">
+      </div>
+      <button id="capture-btn" onclick="takePhoto()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="preview-overlay">
+    <img id="preview-img" src="" alt="Dit foto">
+    <p id="preview-label">Billedet indeholder figuren som overlay</p>
+    <div id="preview-btns">
+      <button id="discard-btn" onclick="closePreview()">Kassér</button>
+      <button id="save-btn" onclick="savePhoto()">Gem foto</button>
     </div>
   </div>
 
@@ -92,6 +107,7 @@
   let currentShape = 'circle';
   let opacity = 0.4;
   let animFrame;
+  let lastPhotoUrl = null;
 
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
@@ -109,57 +125,85 @@
     document.getElementById('shape-label').textContent = label;
   }
 
-  function drawShape() {
-    resizeCanvas();
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-    const size = Math.min(canvas.width, canvas.height) * 0.36;
-
-    ctx.strokeStyle = `rgba(255, 255, 255, ${Math.min(opacity * 2.5, 0.95)})`;
-    ctx.fillStyle = `rgba(80, 160, 255, ${opacity})`;
-    ctx.lineWidth = 3.5;
-
-    ctx.beginPath();
+  function drawShapeOnContext(sctx, w, h) {
+    const cx = w / 2;
+    const cy = h / 2;
+    const size = Math.min(w, h) * 0.36;
+    sctx.strokeStyle = `rgba(255,255,255,${Math.min(opacity * 2.5, 0.95)})`;
+    sctx.fillStyle = `rgba(80,160,255,${opacity})`;
+    sctx.lineWidth = Math.max(w * 0.005, 3);
+    sctx.beginPath();
     if (currentShape === 'circle') {
-      ctx.arc(cx, cy, size, 0, Math.PI * 2);
+      sctx.arc(cx, cy, size, 0, Math.PI * 2);
     } else if (currentShape === 'oval') {
-      ctx.ellipse(cx, cy, size, size * 0.6, 0, 0, Math.PI * 2);
+      sctx.ellipse(cx, cy, size, size * 0.6, 0, 0, Math.PI * 2);
     } else if (currentShape === 'square') {
-      ctx.rect(cx - size, cy - size, size * 2, size * 2);
+      sctx.rect(cx - size, cy - size, size * 2, size * 2);
     } else if (currentShape === 'rectangle') {
-      ctx.rect(cx - size, cy - size * 0.58, size * 2, size * 1.16);
+      sctx.rect(cx - size, cy - size * 0.58, size * 2, size * 1.16);
     } else if (currentShape === 'triangle') {
-      ctx.moveTo(cx, cy - size);
-      ctx.lineTo(cx + size * 0.866, cy + size * 0.5);
-      ctx.lineTo(cx - size * 0.866, cy + size * 0.5);
-      ctx.closePath();
+      sctx.moveTo(cx, cy - size);
+      sctx.lineTo(cx + size * 0.866, cy + size * 0.5);
+      sctx.lineTo(cx - size * 0.866, cy + size * 0.5);
+      sctx.closePath();
     } else if (currentShape === 'pentagon') {
       for (let i = 0; i < 5; i++) {
         const a = (i * 2 * Math.PI / 5) - Math.PI / 2;
-        i === 0 ? ctx.moveTo(cx + size * Math.cos(a), cy + size * Math.sin(a))
-                : ctx.lineTo(cx + size * Math.cos(a), cy + size * Math.sin(a));
+        i === 0 ? sctx.moveTo(cx + size * Math.cos(a), cy + size * Math.sin(a))
+                : sctx.lineTo(cx + size * Math.cos(a), cy + size * Math.sin(a));
       }
-      ctx.closePath();
+      sctx.closePath();
     } else if (currentShape === 'hexagon') {
       for (let i = 0; i < 6; i++) {
         const a = (i * 2 * Math.PI / 6) - Math.PI / 6;
-        i === 0 ? ctx.moveTo(cx + size * Math.cos(a), cy + size * Math.sin(a))
-                : ctx.lineTo(cx + size * Math.cos(a), cy + size * Math.sin(a));
+        i === 0 ? sctx.moveTo(cx + size * Math.cos(a), cy + size * Math.sin(a))
+                : sctx.lineTo(cx + size * Math.cos(a), cy + size * Math.sin(a));
       }
-      ctx.closePath();
+      sctx.closePath();
     } else if (currentShape === 'star') {
       for (let i = 0; i < 10; i++) {
         const r = i % 2 === 0 ? size : size * 0.42;
         const a = (i * Math.PI / 5) - Math.PI / 2;
-        i === 0 ? ctx.moveTo(cx + r * Math.cos(a), cy + r * Math.sin(a))
-                : ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+        i === 0 ? sctx.moveTo(cx + r * Math.cos(a), cy + r * Math.sin(a))
+                : sctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
       }
-      ctx.closePath();
+      sctx.closePath();
     }
-    ctx.fill();
-    ctx.stroke();
-    animFrame = requestAnimationFrame(drawShape);
+    sctx.fill();
+    sctx.stroke();
+  }
+
+  function drawLoop() {
+    resizeCanvas();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawShapeOnContext(ctx, canvas.width, canvas.height);
+    animFrame = requestAnimationFrame(drawLoop);
+  }
+
+  function takePhoto() {
+    const shot = document.createElement('canvas');
+    shot.width = video.videoWidth || window.innerWidth;
+    shot.height = video.videoHeight || window.innerHeight;
+    const sctx = shot.getContext('2d');
+    sctx.drawImage(video, 0, 0, shot.width, shot.height);
+    drawShapeOnContext(sctx, shot.width, shot.height);
+    lastPhotoUrl = shot.toDataURL('image/jpeg', 0.93);
+    document.getElementById('preview-img').src = lastPhotoUrl;
+    document.getElementById('preview-overlay').classList.add('visible');
+  }
+
+  function closePreview() {
+    document.getElementById('preview-overlay').classList.remove('visible');
+    lastPhotoUrl = null;
+  }
+
+  function savePhoto() {
+    if (!lastPhotoUrl) return;
+    const a = document.createElement('a');
+    a.href = lastPhotoUrl;
+    a.download = `geometrijagt-${currentShape}-${Date.now()}.jpg`;
+    a.click();
+    closePreview();
   }
 
   async function startCamera() {
@@ -170,7 +214,7 @@
       });
       video.srcObject = stream;
       document.getElementById('start-screen').style.display = 'none';
-      drawShape();
+      drawLoop();
     } catch (e) {
       document.getElementById('error-msg').style.display = 'block';
       document.getElementById('start-btn').textContent = 'Prøv igen';
