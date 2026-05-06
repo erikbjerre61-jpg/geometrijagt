@@ -106,8 +106,8 @@
 
   function drawShapeOnContext(sctx, w, h) {
     const cx = w / 2;
-    const cy = h / 2;
-    const size = Math.min(w, h) * 0.36;
+    const cy = h * 0.42; // lidt over midten så figuren ikke overlapper knapperne
+    const size = Math.min(w, h) * 0.33;
     sctx.strokeStyle = `rgba(255,255,255,${Math.min(opacity * 2.5, 0.95)})`;
     sctx.fillStyle = `rgba(80,160,255,${opacity})`;
     sctx.lineWidth = Math.max(w * 0.005, 3);
