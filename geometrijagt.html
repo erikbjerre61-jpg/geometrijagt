@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Geometrijagt</title>
+<title>Figurjagt</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #000; font-family: -apple-system, sans-serif; height: 100dvh; overflow: hidden; }
@@ -31,7 +31,7 @@
   #preview-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 24px; }
   #preview-overlay.visible { display: flex; }
   #preview-img { max-width: 100%; max-height: 62dvh; border-radius: 12px; object-fit: contain; }
-  #preview-label { color: rgba(255,255,255,0.55); font-size: 13px; text-align: center; }
+  #preview-label { color: rgba(255,255,255,0.85); font-size: 18px; text-align: center; line-height: 1.4; max-width: 280px; font-weight: 500; }
   #preview-btns { display: flex; gap: 12px; }
   #save-btn { background: #fff; color: #000; border: none; border-radius: 12px; padding: 13px 28px; font-size: 16px; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   #discard-btn { background: rgba(255,255,255,0.12); color: #fff; border: 1.5px solid rgba(255,255,255,0.3); border-radius: 12px; padding: 13px 28px; font-size: 16px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
@@ -69,7 +69,7 @@
 
   <div id="preview-overlay">
     <img id="preview-img" src="" alt="Dit foto">
-    <p id="preview-label">Tryk "Gem foto" og vælg "Gem billede" i menuen</p>
+    <p id="preview-label">Hold fingeren på billedet for at dele eller gemme</p>
     <div id="preview-btns">
       <button id="discard-btn" onclick="closePreview()">Kassér</button>
       <button id="save-btn" onclick="savePhoto()">Gem foto</button>
@@ -77,7 +77,7 @@
   </div>
 
   <div id="start-screen">
-    <h1>Geometrijagt</h1>
+    <h1>Figurjagt</h1>
     <p>Vælg en geometrisk figur og find noget i virkeligheden der har samme form.</p>
     <button id="start-btn" onclick="startCamera()">Start kamera</button>
     <span id="error-msg">Kunne ikke åbne kamera. Tjek at du har givet tilladelse i indstillinger.</span>
@@ -129,8 +129,8 @@
       sctx.rect(cx - size, cy - size * 0.58, size * 2, size * 1.16);
 
     } else if (currentShape === 'triangle') {
-      // Standard trekant
-      sctx.moveTo(cx, cy - size);
+      // Standard trekant – 30% højere
+      sctx.moveTo(cx, cy - size * 1.3);
       sctx.lineTo(cx + size * 0.866, cy + size * 0.5);
       sctx.lineTo(cx - size * 0.866, cy + size * 0.5);
       sctx.closePath();
@@ -219,10 +219,29 @@
 
   function savePhoto() {
     if (!lastPhotoUrl) return;
-    // På iOS åbnes billedet i nyt faneblad – brugeren kan så holde fingeren nede og gemme
     const w = window.open();
-    w.document.write('<img src="' + lastPhotoUrl + '" style="max-width:100%;display:block;">');
-    w.document.write('<p style="font-family:sans-serif;padding:12px;color:#555;">Hold fingeren på billedet og vælg "Gem billede" for at gemme det i Fotos.</p>');
+    w.document.write(`
+      <html><head><meta name="viewport" content="width=device-width,initial-scale=1">
+      <style>
+        body { margin: 0; background: #111; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100dvh; }
+        .banner { width: 100%; background: #1a1a2e; color: #fff; padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
+        .back-arrow { font-size: 22px; }
+        .banner-text { font-size: 16px; line-height: 1.4; }
+        .banner-text strong { display: block; font-size: 17px; margin-bottom: 2px; }
+        img { max-width: 100%; display: block; }
+        .hint { color: #aaa; font-size: 16px; padding: 16px 20px; text-align: center; line-height: 1.5; }
+      </style></head><body>
+      <div class="banner">
+        <span class="back-arrow">◀</span>
+        <div class="banner-text">
+          <strong>Gå tilbage til Figurjagt</strong>
+          Tryk på ◀ eller luk dette faneblad i Safari
+        </div>
+      </div>
+      <img src="${lastPhotoUrl}" alt="Dit foto">
+      <p class="hint">Hold fingeren på billedet for at dele eller gemme det i Fotos</p>
+      </body></html>
+    `);
     closePreview();
   }
 
