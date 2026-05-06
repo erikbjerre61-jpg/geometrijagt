@@ -28,12 +28,11 @@
   #start-screen p { color: rgba(255,255,255,0.65); font-size: 15px; line-height: 1.5; max-width: 280px; }
   #start-btn { background: #fff; color: #000; border: none; border-radius: 14px; padding: 14px 36px; font-size: 17px; font-weight: 600; cursor: pointer; margin-top: 8px; -webkit-tap-highlight-color: transparent; }
   #error-msg { color: #ff6b6b; font-size: 14px; display: none; }
-  #preview-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 24px; }
+  #preview-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.93); display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; }
   #preview-overlay.visible { display: flex; }
-  #preview-img { max-width: 100%; max-height: 62dvh; border-radius: 12px; object-fit: contain; }
-  #preview-label { color: rgba(255,255,255,0.85); font-size: 18px; text-align: center; line-height: 1.4; max-width: 280px; font-weight: 500; }
-  #preview-btns { display: flex; gap: 12px; }
-  #save-btn { background: #fff; color: #000; border: none; border-radius: 12px; padding: 13px 28px; font-size: 16px; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  #preview-img { max-width: 100%; max-height: 65dvh; border-radius: 12px; object-fit: contain; }
+  #preview-label { color: rgba(255,255,255,0.9); font-size: 17px; text-align: center; line-height: 1.5; max-width: 300px; font-weight: 500; }
+  #preview-hint { display: block; font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 4px; text-align: center; }
   #discard-btn { background: rgba(255,255,255,0.12); color: #fff; border: 1.5px solid rgba(255,255,255,0.3); border-radius: 12px; padding: 13px 28px; font-size: 16px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 </style>
 </head>
@@ -70,10 +69,8 @@
   <div id="preview-overlay">
     <img id="preview-img" src="" alt="Dit foto">
     <p id="preview-label">Hold fingeren på billedet for at dele eller gemme</p>
-    <div id="preview-btns">
-      <button id="discard-btn" onclick="closePreview()">Kassér</button>
-      <button id="save-btn" onclick="savePhoto()">Gem foto</button>
-    </div>
+    <span id="preview-hint">Tryk på knappen nedenfor for at tage et nyt billede</span>
+    <button id="discard-btn" onclick="closePreview()">Tilbage til kamera</button>
   </div>
 
   <div id="start-screen">
@@ -215,34 +212,6 @@
   function closePreview() {
     document.getElementById('preview-overlay').classList.remove('visible');
     lastPhotoUrl = null;
-  }
-
-  function savePhoto() {
-    if (!lastPhotoUrl) return;
-    const w = window.open();
-    w.document.write(`
-      <html><head><meta name="viewport" content="width=device-width,initial-scale=1">
-      <style>
-        body { margin: 0; background: #111; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100dvh; }
-        .banner { width: 100%; background: #1a1a2e; color: #fff; padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
-        .back-arrow { font-size: 22px; }
-        .banner-text { font-size: 16px; line-height: 1.4; }
-        .banner-text strong { display: block; font-size: 17px; margin-bottom: 2px; }
-        img { max-width: 100%; display: block; }
-        .hint { color: #aaa; font-size: 16px; padding: 16px 20px; text-align: center; line-height: 1.5; }
-      </style></head><body>
-      <div class="banner">
-        <span class="back-arrow">◀</span>
-        <div class="banner-text">
-          <strong>Gå tilbage til Figurjagt</strong>
-          Tryk på ◀ eller luk dette faneblad i Safari
-        </div>
-      </div>
-      <img src="${lastPhotoUrl}" alt="Dit foto">
-      <p class="hint">Hold fingeren på billedet for at dele eller gemme det i Fotos</p>
-      </body></html>
-    `);
-    closePreview();
   }
 
   async function startCamera() {
